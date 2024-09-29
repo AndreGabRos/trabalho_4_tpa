@@ -1,0 +1,5 @@
+O programa possui a estrutura Aluno para representar o aluno, possuindo os campos matricula e nome. Para representar o nó da arvore, que serve para dizer se há um aluno naquele campo do vetor, possuindo então os campos aluno do tipo Aluno e flag do tipo int. Para representar a estrutura árvore há a estrutura ArvoreBinaria, que possui um vetor de alunos e a quantidade de elementos inseridos.
+
+A função de busca retorna um inteiro, que pode ser a posição do elemento no vetor ou -1 para o caso do aluno não ser encontrado.
+A função de inserir_aluno() insere o aluno e retorna a quantidade de alunos inseridos.
+A função criar_aluno() recebe dados do usuário do programa e retorna um Aluno.
