@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 
+
 int main() {
   int opcao;
-  int tamanho_do_vetor = 100;
   ArvoreBinaria arvore = criar_arvore();
   Aluno aluno;
+  int opcao_imprimir = 0;
+  int matricula = 0;
   printf("quantidade: %d\n", arvore.quantidade_elementos);
 
   do {
@@ -22,29 +24,23 @@ int main() {
 
     switch (opcao) {
     case 1:
-
-      if (cadastrar_aluno(&arvore, criar_aluno(), tamanho_do_vetor) != -1) {
-        printf("Aluno inserido com sucesso!\n");
-      } else {
-        printf("Falha ao inserir aluno.\n");
-      }
+      cadastrar_aluno(&arvore, criar_aluno(), TAMANHO_VETOR);
       break;
-
     case 2:
-      // printf("Digite a matricula do aluno a remover: ");
-      // scanf("%d", &matricula);
-      // removerAluno(&arvore, matricula);
+      printf("Qual aluno deseja remover: ");
+      scanf("%d", &matricula);
+      remover_aluno(&arvore, matricula);
       break;
 
     case 3:
       buscar_aluno(arvore);
       break;
     case 4:
-      // salvarBaseDados(&arvore);
+      salvar_arvore(&arvore);
       break;
 
     case 5:
-      // imprimirAlunos(&arvore);
+      imprimir_alunos(&arvore);
       break;
 
     case 0:
@@ -66,33 +62,34 @@ ArvoreBinaria criar_arvore() {
   return arvore;
 }
 
-int cadastrar_aluno(ArvoreBinaria *arvore, Aluno aluno, int tamanho_do_vetor) {
+void cadastrar_aluno(ArvoreBinaria *arvore, Aluno aluno, int tamanho_do_vetor) {
   if (verificar_aluno(arvore, aluno, tamanho_do_vetor) == -1) {
     printf("Aluno ja cadastrado.\n");
-    return -1;
+    return;
   }
 
-  int posicao_no = 0;
-  while (posicao_no != -1) {
+  int posicao_no = 0; // Começamos pela raiz da árvore
+  while (1)           // Loop até encontrar uma posição livre
+  {
     if (posicao_no >= tamanho_do_vetor) {
-      return -1;
-    }
-    if (arvore->alunos[posicao_no].flag == 0) {
-      inserir_aluno(arvore, aluno, posicao_no);
-      posicao_no = -1;
+      printf("Árvore cheia. Não é possível inserir mais alunos.\n");
+      return;
     }
 
+    if (arvore->alunos[posicao_no].flag == 0) // Se a posição está livre
+    {
+      inserir_aluno(arvore, aluno, posicao_no);
+      printf("Aluno inserido com sucesso.\n");
+      return;
+    }
+
+    // Decide se deve ir para a esquerda ou direita
     if (aluno.matricula < arvore->alunos[posicao_no].aluno.matricula) {
-      posicao_no = 2 * posicao_no + 1;
+      posicao_no = 2 * posicao_no + 1; // Filho esquerdo
     } else {
-      posicao_no = 2 * posicao_no + 2;
+      posicao_no = 2 * posicao_no + 2; // Filho direito
     }
   }
-
-  arvore->alunos[arvore->quantidade_elementos].aluno = aluno;
-  arvore->quantidade_elementos++;
-
-  return arvore->quantidade_elementos;
 }
 
 void inserir_aluno(ArvoreBinaria *arvore, Aluno aluno, int posicao_no) {
@@ -154,10 +151,143 @@ void buscar_aluno(ArvoreBinaria arvore) {
   }
 }
 
-// Remover um elemento é basicamente
-int remover_no_sem_filho(ArvoreBinaria *arvore, int posicao_elemento) {
-  arvore->alunos[posicao_elemento].flag = 0;
+void remover_no_folha(ArvoreBinaria *arvore, int posicao_elemento) {
+    arvore->alunos[posicao_elemento].flag = 0;
+    arvore->quantidade_elementos--;
+    printf("Aluno removido (nó folha).\n");
+}
+
+void remover_no_com_um_filho_direito(ArvoreBinaria *arvore, int posicao_elemento) {
+  int filho_direito = posicao_elemento * 2 + 2;
+
+  arvore->alunos[posicao_elemento] = arvore->alunos[filho_direito];
+  arvore->alunos[filho_direito].flag = 0; // Marca o nó como removido
   arvore->quantidade_elementos--;
 
-  return 0;
+  printf("Aluno removido e substituído pelo filho direito.\n");
+}
+
+void remover_no_com_um_filho_esquerdo(ArvoreBinaria *arvore, int posicao_elemento) {
+  int filho_esquerdo = posicao_elemento * 2 + 1;
+
+  arvore->alunos[posicao_elemento] = arvore->alunos[filho_esquerdo];
+  arvore->alunos[filho_esquerdo].flag = 0; // Marca o nó como removido
+  arvore->quantidade_elementos--;
+
+  printf("Aluno removido e substituído pelo filho esquerdo.\n");
+}
+
+void remover_no_com_dois_filhos(ArvoreBinaria *arvore, int posicao_elemento) {
+  int filho_direito = posicao_elemento * 2 + 2;
+  // Encontra o sucessor (menor nó da subárvore direita)
+  int sucessor = filho_direito;
+  int pai_sucessor = posicao_elemento; // Pai do sucessor para remanejar se necessário
+
+  // Percorre à esquerda até encontrar o sucessor (o menor valor na subárvore direita)
+  while (2 * sucessor + 1 < TAMANHO_VETOR && arvore->alunos[2 * sucessor + 1].flag == 1) {
+    pai_sucessor = sucessor; // Guarda o pai do sucessor
+    sucessor = 2 * sucessor + 1;
+  }
+
+  // Substitui o nó pela matrícula e nome do sucessor
+  arvore->alunos[posicao_elemento] = arvore->alunos[sucessor];
+
+  // Verifica o filho direito do sucessor (se existir)
+  int filho_direito_sucessor = 2 * sucessor + 2;
+  if (filho_direito_sucessor < 100 && arvore->alunos[filho_direito_sucessor].flag == 1) {
+
+    // Se o sucessor tiver um filho à direita, conectamos o pai do sucessor ao filho direito do sucessor
+    if (pai_sucessor == posicao_elemento) {
+      // Se o sucessor era filho direto do nó a ser removido, o filho direito do sucessor toma o lugar do sucessor
+      arvore->alunos[sucessor] = arvore->alunos[filho_direito_sucessor];
+    } else {
+      // Caso contrário, o filho esquerdo do pai do sucessor deve apontar para o filho direito do sucessor
+      arvore->alunos[2 * pai_sucessor + 1] = arvore->alunos[filho_direito_sucessor];
+    }
+
+  }
+
+  // Marca o nó do sucessor original como removido
+  arvore->alunos[sucessor].flag = 0;
+
+  printf("Aluno removido e substituído pelo sucessor.\n");
+
+}
+
+void remover_aluno(ArvoreBinaria *arvore, int matricula) {
+  int pos = pesquisar(arvore, matricula, TAMANHO_VETOR); // Encontra a posição do aluno
+  if (pos == -1) {
+    printf("Aluno não encontrado.\n");
+    return;
+  }
+
+  // Verifica se é uma folha
+  int filho_esquerdo = 2 * pos + 1;
+  int filho_direito = 2 * pos + 2;
+
+  // Caso 1: Nó folha
+  if ((filho_esquerdo >= TAMANHO_VETOR || arvore->alunos[filho_esquerdo].flag == 0) && (filho_direito >= TAMANHO_VETOR || arvore->alunos[filho_direito].flag == 0)) {
+    remover_no_folha(arvore, pos);
+  }
+
+  // Caso 2: Nó com um filho
+  else if ((filho_esquerdo < TAMANHO_VETOR && arvore->alunos[filho_esquerdo].flag == 1) && (filho_direito >= TAMANHO_VETOR || arvore->alunos[filho_direito].flag == 0)) {
+    remover_no_com_um_filho_esquerdo(arvore, pos);
+  } else if ((filho_direito < 100 && arvore->alunos[filho_direito].flag == 1) && (filho_esquerdo >= 100 || arvore->alunos[filho_esquerdo].flag == 0)) {
+    remover_no_com_um_filho_direito(arvore, pos);
+  }
+
+  // Caso 3: Nó com dois filhos
+  else if (filho_esquerdo < 100 && filho_direito < 100 && arvore->alunos[filho_esquerdo].flag == 1 && arvore->alunos[filho_direito].flag == 1) {
+    remover_no_com_dois_filhos(arvore, pos);
+  }
+}
+
+// Função auxiliar para imprimir os alunos em ordem
+void imprimir_em_ordem(ArvoreBinaria *arvore, int pos) {
+  if (pos < 100 && arvore->alunos[pos].flag == 1) {
+    // Chama recursivamente para o filho esquerdo
+    imprimir_em_ordem(arvore, 2 * pos + 1);
+
+    // Imprime o aluno na posição atual
+    printf("Matrícula: %d, Nome: %s\n", arvore->alunos[pos].aluno.matricula,
+           arvore->alunos[pos].aluno.nome);
+
+    // Chama recursivamente para o filho direito
+    imprimir_em_ordem(arvore, 2 * pos + 2);
+  }
+}
+
+// Função principal para imprimir os alunos
+void imprimir_alunos(ArvoreBinaria *arvore) {
+  printf("Lista de alunos:\n");
+  imprimir_em_ordem(arvore, 0); // Começa a impressão a partir da raiz (posição 0)
+}
+
+void imprimir_array_alunos(ArvoreBinaria *arvore) {
+  printf("Lista de alunos no array:\n");
+  for (int i = 0; i < 100; i++) {
+    if (arvore->alunos[i].flag == 1) { // Verifica se o aluno está ativo
+      printf("Índice %d - Matrícula: %d, Nome: %s\n", i, arvore->alunos[i].aluno.matricula, arvore->alunos[i].aluno.nome);
+    }
+  }
+}
+
+void salvar_arvore(ArvoreBinaria *arvore) {
+  FILE *file = fopen("arquivo.txt", "w");
+  if (file == NULL) {
+      printf("Erro ao abrir o arquivo para salvar.\n");
+      return;
+  }
+
+  printf("quantidade de elementos: %d\n", arvore->quantidade_elementos);
+  
+  for (int i = 0; i < 100; i++) {  // Percorre todo o vetor
+      if (arvore->alunos[i].flag == 1) {  // Verifica se o aluno está ativo
+          fprintf(file, "%s\n%d\n", arvore->alunos[i].aluno.nome, arvore->alunos[i].aluno.matricula);
+      }
+  }
+
+  fclose(file);
+  printf("Base de dados salva com sucesso.\n");
 }

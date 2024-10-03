@@ -1,5 +1,12 @@
-O programa possui a estrutura Aluno para representar o aluno, possuindo os campos matricula e nome. Para representar o nó da arvore, que serve para dizer se há um aluno naquele campo do vetor, possuindo então os campos aluno do tipo Aluno e flag do tipo int. Para representar a estrutura árvore há a estrutura ArvoreBinaria, que possui um vetor de alunos e a quantidade de elementos inseridos.
+Estratégia
+A árvore segue o algoritmo de Árvore Binária de Busca.
+Funções que retornam um inteiro para demarcar sucesso ou falha da operação retornam 0 para sucesso e -1 para falha. Algumas funções podem retornar outros valores para sucesso.
+A função de busca retorna a posição do elemento procurado e a função de inserção retorna a quantidade de elementos do vetor.
 
-A função de busca retorna um inteiro, que pode ser a posição do elemento no vetor ou -1 para o caso do aluno não ser encontrado.
-A função de inserir_aluno() insere o aluno e retorna a quantidade de alunos inseridos.
-A função criar_aluno() recebe dados do usuário do programa e retorna um Aluno.
+Estruturas
+Aluno -> struct que possui o nome e matrícula de um aluno.
+NoAluno -> struct que representa um nó da árvore. Contém uma struct Aluno e um campo do tipo int flag, que representa se o nó é considerado vazio ou não.
+Arvore -> struct que representa um árovre. Possui um vetor de NoAluno e um campo do tipo inteiro com a quantidade de alunos.
+
+Algoritmos
+
