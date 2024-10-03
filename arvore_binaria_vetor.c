@@ -9,7 +9,8 @@ int main() {
   Aluno aluno;
   int opcao_imprimir = 0;
   int matricula = 0;
-  printf("quantidade: %d\n", arvore.quantidade_elementos);
+
+  ler_dados_do_arquivo(&arvore, TAMANHO_VETOR);
 
   do {
     printf("\nMenu:\n");
@@ -36,7 +37,7 @@ int main() {
       buscar_aluno(arvore);
       break;
     case 4:
-      salvar_arvore(&arvore);
+      salvar_arvore_arquivo(&arvore);
       break;
 
     case 5:
@@ -63,10 +64,16 @@ ArvoreBinaria criar_arvore() {
 }
 
 void cadastrar_aluno(ArvoreBinaria *arvore, Aluno aluno, int tamanho_do_vetor) {
-  if (verificar_aluno(arvore, aluno, tamanho_do_vetor) == -1) {
+  if (pesquisar(arvore, aluno.matricula, tamanho_do_vetor) != -1) {
     printf("Aluno ja cadastrado.\n");
     return;
   }
+
+  if (aluno.matricula < 0) {
+    printf("Matricula invalida.\n");
+    return;
+  }
+
 
   int posicao_no = 0; // Começamos pela raiz da árvore
   while (1)           // Loop até encontrar uma posição livre
@@ -112,7 +119,7 @@ Aluno criar_aluno() {
   return aluno;
 }
 
-int verificar_aluno(ArvoreBinaria *arvore, Aluno aluno, int tamanho_do_vetor) {
+int validar_aluno(ArvoreBinaria *arvore, Aluno aluno, int tamanho_do_vetor) {
   if (pesquisar(arvore, aluno.matricula, tamanho_do_vetor) != -1) {
     printf("Elemento ja inserido.\n");
     return -1;
@@ -123,9 +130,9 @@ int verificar_aluno(ArvoreBinaria *arvore, Aluno aluno, int tamanho_do_vetor) {
 
 int pesquisar(ArvoreBinaria *arvore, int matricula, int tamanho_do_vetor) {
   int pos_elemento = 0;
-  while (pos_elemento < tamanho_do_vetor && pos_elemento != -1) {
+  while (pos_elemento < tamanho_do_vetor) {
     if (arvore->alunos[pos_elemento].flag == 0) { // Elemento nao encontrado
-      pos_elemento = -1;
+      return -1;
     }
     if (matricula == arvore->alunos[pos_elemento].aluno.matricula) {
       return pos_elemento;
@@ -243,7 +250,6 @@ void remover_aluno(ArvoreBinaria *arvore, int matricula) {
   }
 }
 
-// Função auxiliar para imprimir os alunos em ordem
 void imprimir_em_ordem(ArvoreBinaria *arvore, int pos) {
   if (pos < 100 && arvore->alunos[pos].flag == 1) {
     // Chama recursivamente para o filho esquerdo
@@ -258,22 +264,12 @@ void imprimir_em_ordem(ArvoreBinaria *arvore, int pos) {
   }
 }
 
-// Função principal para imprimir os alunos
 void imprimir_alunos(ArvoreBinaria *arvore) {
   printf("Lista de alunos:\n");
-  imprimir_em_ordem(arvore, 0); // Começa a impressão a partir da raiz (posição 0)
+  imprimir_em_ordem(arvore, 0);
 }
 
-void imprimir_array_alunos(ArvoreBinaria *arvore) {
-  printf("Lista de alunos no array:\n");
-  for (int i = 0; i < 100; i++) {
-    if (arvore->alunos[i].flag == 1) { // Verifica se o aluno está ativo
-      printf("Índice %d - Matrícula: %d, Nome: %s\n", i, arvore->alunos[i].aluno.matricula, arvore->alunos[i].aluno.nome);
-    }
-  }
-}
-
-void salvar_arvore(ArvoreBinaria *arvore) {
+void salvar_arvore_arquivo(ArvoreBinaria *arvore) {
   FILE *file = fopen("arquivo.txt", "w");
   if (file == NULL) {
       printf("Erro ao abrir o arquivo para salvar.\n");
@@ -289,5 +285,31 @@ void salvar_arvore(ArvoreBinaria *arvore) {
   }
 
   fclose(file);
-  printf("Base de dados salva com sucesso.\n");
+  printf("Arvore salva com sucesso.\n");
+}
+
+void ler_dados_do_arquivo(ArvoreBinaria *arvore, int tamanho_do_vetor) {
+  FILE *file = fopen("./arquivo.txt", "r");
+  if (file == NULL) {
+      printf("Erro ao abrir o arquivo para leitura.\n");
+      return;
+  }
+
+  char nome[50];
+  int matricula;
+
+  while (!feof(file)) { 
+    fscanf(file, " %[^\n]", nome);
+    fscanf(file, "%d\n", &matricula);
+
+    Aluno aluno;
+    strcpy(aluno.nome, nome);
+    aluno.matricula = matricula;
+
+    printf("b\n");
+    cadastrar_aluno(arvore, aluno, tamanho_do_vetor);
+  }
+
+  fclose(file);
+  printf("Arquivo carregado com sucesso.\n");
 }
